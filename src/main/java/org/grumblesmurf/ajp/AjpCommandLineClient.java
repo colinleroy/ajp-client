@@ -18,6 +18,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import java.lang.NumberFormatException;
+import java.lang.ArrayIndexOutOfBoundsException;
+
 import java.net.URL;
 
 import java.util.List;
@@ -25,26 +28,111 @@ import java.util.Map;
 
 public class AjpCommandLineClient
 {
+
+    private static void usage(String errMsg) {
+        System.out.println("Usage: java -jar ajp-client.jar [OPTIONS]");
+        System.out.println("    --help                : this help");
+        System.out.println(" -h --host  [HOST]        : [required] hostname to connect to");
+        System.out.println(" -p --port  [PORT]        : [required] port to connect to");
+        System.out.println(" -u --url   [URL]         : [optional] URL to fetch");
+        System.out.println(" -l --login [LOGIN]       : [optional] Login");
+        System.out.println("    --password [PASSWORD] : [optional] Password");
+        System.out.println("    --post [FILE]         : [optional] File to post data from");
+
+        if (errMsg != null) {
+            System.out.println("");
+            System.err.println(errMsg);
+            System.exit(1);
+        }
+
+        System.exit(0);
+    }
+
     public static void main(String[] args) throws Exception {
-        String host = args[0];
-        int port = Integer.parseInt(args[1]);
+        int i = 0;
+        
+        String host = null;
+        int port = -1;
+        URL url = null;
+        String login = null;
+        String password = null;
+        String postData = null;
+
+        while (i < args.length) {
+            try {
+                switch(args[i]) {
+                    case "--help":
+                        usage(null);
+                        break;
+
+                    case "-h":
+                    case "--host":
+                        i++;
+                        host = args[i];
+                        break;
+
+                    case "-p":
+                    case "--port":
+                        i++;
+                        try {
+                            port = Integer.parseInt(args[i]);
+                        } catch (NumberFormatException e) {
+                            usage("Invalid port "+args[i]);
+                        }
+                        break;
+
+                    case "-u":
+                    case "--url":
+                        i++;
+                        url = new URL(args[i]);
+                        break;
+                
+                    case "-l":
+                    case "--login":
+                        i++;
+                        login = args[i];
+                        break;
+                
+                    case "--password":
+                        i++;
+                        password = args[i];
+                        break;
+                
+                    case "--post":
+                        i++;
+                        postData = args[i];
+                        break;
+
+                    default:
+                        usage("Unknown option "+args[i]);
+                }
+            } catch (ArrayIndexOutOfBoundsException e) {
+                usage("Missing parameter value after "+ args[i - 1]);
+            }
+            i++;
+        }
+
+        if (host == null) {
+            usage("Missing host");
+        }
+        
+        if (port == -1) {
+            usage("Missing port");
+        }
 
         AjpClient ac = AjpClient.newInstance(host, port);
-        if (args.length == 2) {
+        if (url == null) {
             System.out.printf("CPing %s:%s: %s%n", host, port, ac.cping() ? "OK" : "NOK");
         } else {
-            URL url = new URL(args[2]);
-            if (args.length == 5) {
-                ac.setAuthentication(args[3], args[4]);
-            } else if (args.length == 6) {
-                ac.setAuthentication(args[4], args[5]);
+            if (login != null && password != null) {
+                ac.setAuthentication(login, password);
             }
             
             AjpResponse resp;
-            if (args.length == 3 || args.length == 5)
+            if (postData == null)
                 resp = ac.get(url);
             else 
-                resp = ac.post(url, read(args[3]));
+                resp = ac.post(url, read(postData));
             
             System.out.printf("%s %s%n", resp.getResponseCode(), resp.getResponseMessage());
             for (Map.Entry<String, List<String>> e : resp.getHeaderFields().entrySet()) {
