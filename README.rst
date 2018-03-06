@@ -9,11 +9,35 @@ finally wrote one.
 Yes, I know the code is horrible; yes, I know there is no
 documentation.  Both of those things can be fixed in time.
 
+==================
+Command-Line Usage
+==================
+
+``Usage: java -jar ajp-client.jar [OPTIONS]``
+
+``--help                : this help``
+
+``-h --host  [HOST]        : [required] hostname to connect to``
+
+``-p --port  [PORT]        : [required] port to connect to``
+
+``-u --url   [URL]         : [optional] URL to fetch``
+
+``-l --login [LOGIN]       : [optional] Login``
+
+``--password [PASSWORD] : [optional] Password``
+
+``--post [FILE]         : [optional] File to post data from``
+
+``--header [HEADER]     : [optional] Extra request header in the form "Header: Value". Multiple extra headers can be sent``
+
+
 ====================
  Boring legal stuff
 ====================
 
 Copyright (c) 2010 Espen Wiborg <espenhw@grumblesmurf.org>
+Copyright (c) 2018 Colin Leroy <colin@colino.net>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
