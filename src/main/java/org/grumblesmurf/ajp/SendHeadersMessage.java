@@ -54,7 +54,7 @@ class SendHeadersMessage
 
             String name;
             if (b1 == 0xA0) {
-                name = Constants.RESPONSE_HEADERS[b2];
+                name = Constants.RESPONSE_HEADERS[b2 - 1];
             } else {
                 name = AjpReader.readString(AjpReader.makeInt(b1, b2), in);
             }
