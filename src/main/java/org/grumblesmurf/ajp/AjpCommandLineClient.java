@@ -25,6 +25,7 @@ import java.net.URL;
 
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
 
 public class AjpCommandLineClient
 {
@@ -38,6 +39,8 @@ public class AjpCommandLineClient
         System.out.println(" -l --login [LOGIN]       : [optional] Login");
         System.out.println("    --password [PASSWORD] : [optional] Password");
         System.out.println("    --post [FILE]         : [optional] File to post data from");
+        System.out.println("    --header [HEADER]     : [optional] Extra request header in the form \"Header: Value\"");
+        System.out.println("                                       Multiple extra headers can be sent");
 
         if (errMsg != null) {
             System.out.println("");
@@ -57,6 +60,7 @@ public class AjpCommandLineClient
         String login = null;
         String password = null;
         String postData = null;
+        ArrayList<String> extraHeaders = new ArrayList<String>();
 
         while (i < args.length) {
             try {
@@ -103,6 +107,11 @@ public class AjpCommandLineClient
                         postData = args[i];
                         break;
 
+                    case "--header":
+                        i++;
+                        extraHeaders.add(args[i]);
+                        break;
+
                     default:
                         usage("Unknown option "+args[i]);
                 }
@@ -121,6 +130,7 @@ public class AjpCommandLineClient
         }
 
         AjpClient ac = AjpClient.newInstance(host, port);
+
         if (url == null) {
             System.out.printf("CPing %s:%s: %s%n", host, port, ac.cping() ? "OK" : "NOK");
         } else {
@@ -128,6 +138,15 @@ public class AjpCommandLineClient
                 ac.setAuthentication(login, password);
             }
             
+            for (String header: extraHeaders) {
+                String[] headerParts = header.split(":", 2);
+                if (headerParts.length < 2) {
+                    usage("Invalid header \"" + header + "\": Required form is \"Name: Value\"");
+                } else {
+                    ac.addHeader(headerParts[0].trim(), headerParts[1].trim());
+                }
+            }
+
             AjpResponse resp;
             if (postData == null)
                 resp = ac.get(url);
